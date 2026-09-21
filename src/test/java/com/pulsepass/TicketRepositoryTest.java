@@ -13,7 +13,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class TicketRepositoryIT extends AbstractIntegrationTest {
+class TicketRepositoryTest extends AbstractIntegrationTest {
 
     @Autowired private UserRepository userRepository;
     @Autowired private VenueRepository venueRepository;

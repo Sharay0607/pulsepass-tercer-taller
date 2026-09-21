@@ -11,7 +11,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class UserProfileIT extends AbstractIntegrationTest {
+class UserProfileTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;

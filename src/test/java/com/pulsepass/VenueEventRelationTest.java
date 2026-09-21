@@ -12,7 +12,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class VenueEventRelationIT extends AbstractIntegrationTest {
+class VenueEventRelationTest extends AbstractIntegrationTest {
 
     @Autowired
     private VenueRepository venueRepository;
