@@ -108,6 +108,8 @@ Hibernate corre en modo `ddl-auto: validate`: nunca crea ni modifica el esquema,
 | Eventos por ciudad y artista | JPQL (`@Query`) | Múltiples asociaciones combinadas |
 | Eventos recomendados | JPQL (`@Query`) | Filtros combinados + `DISTINCT` + orden + `LIKE` case-insensitive |
 | Conteo de tickets `PAID` por evento | JPQL (`@Query` con `COUNT`) | Agregación, no expresable como Query Method simple |
+| Tickets PAID de un evento por eventCode | Query Method (navega relación) | Un filtro por estado navegando la relación Ticket → Event |
+| Tickets de eventos futuros | JPQL (`@Query`) | Filtro sobre la fecha del evento asociado + orden cronológico |
 
 **Criterio de elección:** se usan Query Methods cuando la consulta se expresa por nombre (un filtro, un orden o la navegación de una sola relación); se usa JPQL cuando hay JOIN explícito, varias asociaciones combinadas o agregaciones.
 
