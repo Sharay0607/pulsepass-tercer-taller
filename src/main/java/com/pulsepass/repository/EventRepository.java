@@ -15,6 +15,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     // FR-EVT-002
     Optional<Event> findByEventCode(String eventCode);
 
+    // BR-EVENT-001: unicidad del código de evento
+    boolean existsByEventCode(String eventCode);
+
     // FR-EVT-005: eventos publicados ordenados por fecha (Query Method puro)
     List<Event> findByStatusOrderByEventDateAsc(EventStatus status);
 

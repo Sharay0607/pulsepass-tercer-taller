@@ -11,4 +11,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailIgnoreCase(String email);
 
     Optional<User> findByUsername(String username);
+
+    // BR-USER-001 / BR-USER-002: validaciones de unicidad
+    boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByUsername(String username);
 }

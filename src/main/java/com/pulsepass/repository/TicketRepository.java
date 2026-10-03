@@ -21,6 +21,9 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     // FR-TKT-006 (variante sin status)
     List<Ticket> findByUser_Email(String email);
 
+    // FR-SVC-015: tickets de un usuario (email sin distinguir mayúsculas), más recientes primero
+    List<Ticket> findByUser_EmailIgnoreCaseOrderByPurchaseDateDesc(String email);
+
     // FR-TKT-007: tickets PAID de un evento por eventCode
     List<Ticket> findByEvent_EventCodeAndStatus(String eventCode, TicketStatus status);
 
