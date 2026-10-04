@@ -1,6 +1,6 @@
 # PulsePass
 
-Plataforma académica de eventos, artistas y entradas. Este repositorio contiene la **capa de persistencia** del sistema, implementada con Spring Boot, Spring Data JPA, Flyway y PostgreSQL, y validada con pruebas de integración usando Testcontainers.
+Plataforma académica de eventos, artistas y entradas. Este repositorio contiene la **capa de persistencia** (Spring Boot, Spring Data JPA, Flyway, PostgreSQL, validada con Testcontainers) y la **capa de servicios** (reglas de negocio, transacciones, DTOs y MapStruct, validada con unit tests JUnit 5 + Mockito + AssertJ).
 
 ## Tecnologías
 
@@ -13,6 +13,8 @@ Plataforma académica de eventos, artistas y entradas. Este repositorio contiene
 | PostgreSQL | Base de datos relacional |
 | Testcontainers | Pruebas de integración contra un PostgreSQL real en contenedor |
 | Lombok | Reducción de código repetitivo (`@Getter`, `@Setter`, `@NoArgsConstructor`) |
+| MapStruct | 1.6.x — mapeo Entity → DTO en la capa de servicios |
+| JUnit 5 / Mockito / AssertJ | Unit tests de la capa de servicios (sin Spring ni base de datos) |
 | Maven (wrapper) | Construcción y ejecución de pruebas |
 
 ## Estructura del proyecto
@@ -22,12 +24,20 @@ src
 ├── main
 │   ├── java/com/pulsepass
 │   │   ├── domain          # Enums y entidades JPA
-│   │   └── repository      # Repositories con Query Methods y JPQL
+│   │   ├── repository      # Repositories con Query Methods y JPQL
+│   │   ├── dto
+│   │   │   ├── request     # Records de entrada (CreateEventRequest, RegisterUserRequest, PurchaseTicketRequest)
+│   │   │   └── response    # Records de salida (VenueResponse, EventResponse, TicketResponse, ...)
+│   │   ├── mapper          # Interfaces MapStruct (Entity → DTO)
+│   │   ├── exception       # ResourceNotFound / DuplicateResource / BusinessRule
+│   │   └── service         # Interfaces + TicketPriceCalculator
+│   │       └── impl        # Implementaciones @Service
 │   └── resources/db/migration
 │       ├── V1__create_schema.sql
 │       ├── V2__insert_initial_artists.sql
 │       └── V3__add_streaming_url_to_event.sql
 └── test/java/com/pulsepass
+    ├── service             # Unit tests de la capa de servicios (Mockito)
     ├── AbstractIntegrationTest.java
     ├── EventArtistTest.java
     ├── TicketRepositoryTest.java
@@ -164,3 +174,81 @@ Ejecutar una clase de prueba específica:
 Al finalizar correctamente, Maven muestra `BUILD SUCCESS`.
 
 > La primera ejecución puede tardar más porque Docker descarga la imagen de PostgreSQL.
+
+---
+
+# Capa de servicios
+
+Frontera entre las futuras capas de exposición (controllers) y el modelo persistente. Aplica reglas de negocio, coordina repositories, controla transacciones y **nunca devuelve entidades JPA**: siempre DTOs (`record`) construidos con MapStruct.
+
+```
+Controller (futuro) → DTOs → Service (interface + impl) → Repository → Entity → PostgreSQL
+                                   ├── Mapper (MapStruct)
+                                   └── Reglas de negocio + @Transactional
+```
+
+## Servicios
+
+| Servicio | Operaciones | Reglas principales |
+|---|---|---|
+| `VenueService` | `findByCode`, `findActiveVenues` | BR-VENUE-001..002 |
+| `ArtistService` | `findById`, `findByStageName`, `findActiveArtists` | BR-ARTIST-001..002 |
+| `EventService` | `create`, `findByCode`, `findPublishedEvents`, `publish`, `addArtist`, `findByArtist` | BR-EVENT-001..011 |
+| `UserService` | `register` (User + UserProfile), `findByEmail`, `findByUsername` | BR-USER-001..005 |
+| `TicketService` | `purchase`, `findByCode`, `findByUserEmail`, `findPaidTicketsByEvent`, `cancel`, `markAsUsed` | BR-TICKET-001..014 |
+
+## Excepciones
+
+| Excepción | Cuándo |
+|---|---|
+| `ResourceNotFoundException` | El recurso no existe (`Event not found: CMF-2026`) |
+| `DuplicateResourceException` | Conflicto de unicidad (`Username already exists: andrea`) |
+| `BusinessRuleException` | El recurso existe pero la operación no es válida (`User does not meet minimum age.`) |
+
+## Flujo de compra (`TicketService.purchase`)
+
+Una sola transacción (`@Transactional`): si cualquier paso falla se hace rollback completo.
+
+```
+Buscar User → ¿activo? → Buscar Event → ¿PUBLISHED? → ¿fecha futura? → ¿cumple edad (a la fecha del evento)?
+→ ¿paidTickets < capacity? → Calcular precio → Crear Ticket (PAID) → save
+→ si paidTickets + 1 == capacity → Event = SOLD_OUT (misma transacción) → TicketResponse
+```
+
+## Estrategia de precios
+
+El precio **nunca** viene del cliente. `TicketPriceCalculator` (encapsulado y con tests propios) calcula `BigDecimal` = precio base × multiplicador:
+
+| Tipo | Multiplicador |
+|---|---|
+| `GENERAL` | 1.00 |
+| `STUDENT` | 0.70 |
+| `VIP` | 2.00 |
+| `BACKSTAGE` | 3.50 |
+
+El precio base se configura con `pulsepass.pricing.base-price` (por defecto `50000.00`).
+
+## Cambios en repositories (aditivos)
+
+Se agregaron métodos que la capa de servicios necesita; no se modificó ninguno existente:
+`VenueRepository.findByActiveTrueOrderByNameAsc`, `ArtistRepository.findByStageNameIgnoreCase` / `findByActiveTrueOrderByStageNameAsc`, `EventRepository.existsByEventCode`, `UserRepository.existsByUsername` / `existsByEmailIgnoreCase`, `TicketRepository.findByUser_EmailIgnoreCaseOrderByPurchaseDateDesc`.
+
+## Unit tests de servicios
+
+Arquitectura: `JUnit 5 → Service real → Repository mock + Mapper mock` (sin `@SpringBootTest`, sin PostgreSQL, sin Testcontainers). Cada test sigue ARRANGE / ACT / ASSERT y usa `when`, `verify`, `verify(..., never())`, `any()`, `eq()`.
+
+| Clase | Cubre |
+|---|---|
+| `EventServiceImplTest` | TEST-EVENT-001..008 + duplicados, edad mínima, `addArtist` (BR-EVENT-010..011) |
+| `UserServiceImplTest` | TEST-USER-001..004 + normalización de email, consultas |
+| `TicketServiceImplTest` | TEST-TICKET-001..012 + edad en fecha del evento + escenario AC-004..AC-009 (aforo 3) |
+| `TicketPriceCalculatorTest` | Multiplicadores, redondeo, precio nunca negativo |
+| `VenueServiceImplTest`, `ArtistServiceImplTest` | Consultas y errores |
+
+```bash
+# Solo unit tests de servicios (no requieren Docker)
+./mvnw test -Dtest='*ServiceImplTest,TicketPriceCalculatorTest'
+
+# Todo (los tests de persistencia sí requieren Docker)
+./mvnw clean test
+```
