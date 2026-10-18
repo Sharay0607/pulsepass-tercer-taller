@@ -1,0 +1,7 @@
+# Nunca versionar secretos ni evidencias con tokens
+*.env
+*secret*
+evidencias/
+*.token
+# Si exportas el entorno de Postman con valores actuales, no lo subas
+postman/*.current.json
