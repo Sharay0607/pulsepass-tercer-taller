@@ -3,6 +3,7 @@ package com.pulsepass.service;
 import com.pulsepass.dto.request.CreateEventRequest;
 import com.pulsepass.dto.response.EventResponse;
 import com.pulsepass.dto.response.EventSummaryResponse;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 
@@ -10,6 +11,7 @@ public interface EventService {
 
     EventResponse create(CreateEventRequest request);
 
+    @PreAuthorize("@authz.canViewEvent(#p0)")
     EventResponse findByCode(String eventCode);
 
     List<EventSummaryResponse> findPublishedEvents();

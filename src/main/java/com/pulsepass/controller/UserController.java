@@ -2,6 +2,7 @@ package com.pulsepass.controller;
 
 import com.pulsepass.dto.request.RegisterUserRequest;
 import com.pulsepass.dto.response.UserResponse;
+import com.pulsepass.service.AuthService;
 import com.pulsepass.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -18,29 +19,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuthService authService) {
         this.userService = userService;
+        this.authService = authService;
     }
 
-    // UserService.register()  →  201 Created
     @PostMapping
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
-        UserResponse response = userService.register(request);
+        UserResponse response = authService.register(request);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
 
-    // UserService.findByEmail()  →  GET /api/users/by-email?email=andrea@email.com
-    // (el email va como query param: los "." y "@" en un path variable dan problemas de enrutamiento)
     @GetMapping("/by-email")
     public ResponseEntity<UserResponse> findByEmail(@RequestParam("email") String email) {
         return ResponseEntity.ok(userService.findByEmail(email));
     }
 
-    // UserService.findByUsername()  →  GET /api/users/by-username?username=andrea
     @GetMapping("/by-username")
     public ResponseEntity<UserResponse> findByUsername(@RequestParam("username") String username) {
         return ResponseEntity.ok(userService.findByUsername(username));

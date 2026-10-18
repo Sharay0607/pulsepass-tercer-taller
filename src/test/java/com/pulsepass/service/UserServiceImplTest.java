@@ -147,6 +147,6 @@ class UserServiceImplTest {
     }
 
     private static RegisterUserRequest request(String username, String email, LocalDate birthDate) {
-        return new RegisterUserRequest(username, email, "Andrea", "Gómez", "3001234567", "Santa Marta", birthDate);
+        return new RegisterUserRequest(username, email, "Andrea", "Gómez", "3001234567", "Santa Marta", birthDate, "ClaveDePrueba2026!");
     }
 }

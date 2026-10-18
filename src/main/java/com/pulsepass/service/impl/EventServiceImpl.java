@@ -15,6 +15,8 @@ import com.pulsepass.repository.ArtistRepository;
 import com.pulsepass.repository.EventRepository;
 import com.pulsepass.repository.VenueRepository;
 import com.pulsepass.service.EventService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,10 +102,19 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public List<EventSummaryResponse> findByArtist(String stageName) {
+        // Público: solo eventos PUBLISHED. STAFF/ADMIN ven todos los estados (FR-SECEVT-06).
+        boolean privileged = isStaffOrAdmin();
         return eventRepository.findEventsByArtistStageName(stageName)
                 .stream()
+                .filter(e -> privileged || e.getStatus() == EventStatus.PUBLISHED)
                 .map(eventMapper::toSummary)
                 .toList();
+    }
+
+    private static boolean isStaffOrAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.isAuthenticated() && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_STAFF") || a.getAuthority().equals("ROLE_ADMIN"));
     }
 
     // ----------------------------------------------------------------- publish

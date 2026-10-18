@@ -4,6 +4,7 @@ import com.pulsepass.dto.request.RegisterUserRequest;
 import com.pulsepass.exception.DuplicateResourceException;
 import com.pulsepass.exception.GlobalExceptionHandler;
 import com.pulsepass.exception.ResourceNotFoundException;
+import com.pulsepass.service.AuthService;
 import com.pulsepass.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, ControllerTestSecurityConfig.class})
+@WithMockUser(roles = {"USER", "STAFF", "ADMIN"})
 class UserControllerTest {
 
     private static final String VALID_BODY = """
@@ -40,7 +43,8 @@ class UserControllerTest {
               "lastName": "Gomez",
               "phone": "3001234567",
               "city": "Santa Marta",
-              "birthDate": "2000-05-10"
+              "birthDate": "2000-05-10",
+              "password": "ClaveDePrueba2026!"
             }
             """;
 
@@ -50,12 +54,15 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private AuthService authService;
+
     // ------------------------------------------------------------------ POST
 
     @Test // TEST-CTRL-USR-001 · AC-CTRL-007
     void shouldRegisterUser() throws Exception {
         // ARRANGE
-        when(userService.register(any(RegisterUserRequest.class)))
+        when(authService.register(any(RegisterUserRequest.class)))
                 .thenReturn(user("andrea", "andrea@email.com"));
 
         // ACT + ASSERT
@@ -72,7 +79,7 @@ class UserControllerTest {
 
         // el JSON se convirtió bien al DTO y se delegó al Service
         ArgumentCaptor<RegisterUserRequest> captor = ArgumentCaptor.forClass(RegisterUserRequest.class);
-        verify(userService).register(captor.capture());
+        verify(authService).register(captor.capture());
         assertThat(captor.getValue().username()).isEqualTo("andrea");
         assertThat(captor.getValue().email()).isEqualTo("andrea@email.com");
         assertThat(captor.getValue().birthDate()).isEqualTo(LocalDate.of(2000, 5, 10));
@@ -92,7 +99,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Validation failed"))
                 .andExpect(jsonPath("$.details.email").value("Email must be valid"));
 
-        verify(userService, never()).register(any());
+        verify(authService, never()).register(any());
     }
 
     @Test // QT-CTRL-010 / QT-CTRL-007: campos obligatorios ausentes → 400 y el Service no se invoca
@@ -109,7 +116,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.lastName").value("Last name is required"))
                 .andExpect(jsonPath("$.details.birthDate").value("Birth date is required"));
 
-        verify(userService, never()).register(any());
+        verify(authService, never()).register(any());
     }
 
     @Test
@@ -122,13 +129,13 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Malformed or invalid JSON request"))
                 .andExpect(jsonPath("$.details.body").exists());
 
-        verify(userService, never()).register(any());
+        verify(authService, never()).register(any());
     }
 
     @Test // TEST-CTRL-USR-003
     void shouldReturn409WhenUsernameIsDuplicated() throws Exception {
         // ARRANGE
-        when(userService.register(any(RegisterUserRequest.class)))
+        when(authService.register(any(RegisterUserRequest.class)))
                 .thenThrow(new DuplicateResourceException("Username already exists: andrea"));
 
         // ACT + ASSERT
@@ -145,7 +152,7 @@ class UserControllerTest {
     @Test // AC-CTRL-008: 409 sin exponer detalles internos
     void shouldReturn409WhenEmailIsDuplicatedWithoutLeakingInternals() throws Exception {
         // ARRANGE
-        when(userService.register(any(RegisterUserRequest.class)))
+        when(authService.register(any(RegisterUserRequest.class)))
                 .thenThrow(new DuplicateResourceException("Email already exists: andrea@email.com"));
 
         // ACT + ASSERT
