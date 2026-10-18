@@ -520,3 +520,23 @@ curl "http://localhost:8080/api/events/by-artist"             # 400 (falta stage
 | Validación **estructural** en el DTO, **de negocio** en el Service | El Controller no debe conocer reglas del dominio (CTRL-001, CTRL-006). |
 | Un único `GlobalExceptionHandler` | Sin `try/catch` repetidos; todos los errores comparten formato (CTRL-007, CTRL-008). |
 | Mensajes del `500` genéricos | No exponer stack traces, SQL ni estructura interna (NFR-CTRL-007). |
+
+
+---
+
+# Capa de seguridad y autenticación (Fase 4)
+
+Implementación del control de acceso, autenticación basada en tokens JWT (JSON Web Tokens) y autorización por roles mediante **Spring Security**. Protege las rutas de la API REST, codifica credenciales con **BCrypt** y gestiona permisos tanto a nivel de endpoint como de propiedad de recursos.
+
+## Configuración y Variables de Entorno
+
+Para ejecutar la aplicación con soporte de seguridad, es obligatorio definir la clave secreta de firma HMAC-SHA:
+
+| Variable | Descripción | Valor requerido |
+|---|---|---|
+| `PULSEPASS_JWT_SECRET_BASE64` | Secreto en Base64 para firma y validación de tokens JWT | Cadena codificada en Base64 de al menos 256 bits |
+
+```bash
+# Ejemplo de configuración temporal en PowerShell
+$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)
+$env:PULSEPASS_JWT_SECRET_BASE64 = [Convert]::ToBase64String($b)
