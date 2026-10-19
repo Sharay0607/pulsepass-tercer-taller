@@ -1,0 +1,7 @@
+# Perfil "test": clave EXCLUSIVA para pruebas (ficticia, nunca usar en otro entorno).
+pulsepass:
+  security:
+    jwt:
+      issuer: pulsepass-test
+      secret-base64: cHVsc2VwYXNzLXNvbG8tcGFyYS10ZXN0cy0wMTIzNDU2Nzg5LUFCQ0RFRkdI
+      access-token-ttl: PT15M
