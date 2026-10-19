@@ -40,26 +40,26 @@ Si un prerrequisito falla, los dependientes van `BLOCKED`, nunca `PASS`. **No pe
 
 | Paso | ID | Actor | HTTP esperado | HTTP observado | Estado | Observación / evidencia |
 |---|---|---|---|---|---|---|
-| 010 | `E2E-USR-01a` | ANÓNIMO | 201 | | | |
-| 011 | `E2E-USR-01b` | ANÓNIMO | 201 | | | |
-| 012 | `E2E-USR-01c` | ANÓNIMO | 201 | | | |
-| 013 | `E2E-USR-01d` | ANÓNIMO | 201 | | | |
-| 014 | `E2E-USR-01e` | ANÓNIMO | 201 | | | |
-| 015 | `E2E-AUTH-01a` | ANÓNIMO | 200 | | | |
-| 016 | `E2E-AUTH-01b` | ANÓNIMO | 200 | | | |
-| 017 | `E2E-AUTH-01c` | ANÓNIMO | 200 | | | |
-| 018 | `E2E-AUTH-01d` | ANÓNIMO | 200 | | | |
+| 010 | `E2E-USR-01a` | ANÓNIMO | 201 | 201 |PASS| |
+| 011 | `E2E-USR-01b` | ANÓNIMO | 201 | 201 |PASS | |
+| 012 | `E2E-USR-01c` | ANÓNIMO | 201 | 201|PASS | |
+| 013 | `E2E-USR-01d` | ANÓNIMO | 201 | 201 |PASS | |
+| 014 | `E2E-USR-01e` | ANÓNIMO | 201 | 201|PASS | |
+| 015 | `E2E-AUTH-01a` | ANÓNIMO | 200 |200|PASS | |
+| 016 | `E2E-AUTH-01b` | ANÓNIMO | 200 |200|PASS | |
+| 017 | `E2E-AUTH-01c` | ANÓNIMO | 200 |200|PASS | |
+| 018 | `E2E-AUTH-01d` | ANÓNIMO | 200 |200 |PASS | |
 | — | **MANUAL** | — | — | — | ☐ hecho | PAUSA SQL: ejecutar fixtures/seed-e2e.sql PARTE 2 (promueve e2e_staff→STAFF, e2e_admin→ADMIN y desactiva e2e_inactive). |
-| 019 | `E2E-AUTH-01e` | ANÓNIMO | 200 | | | |
-| 020 | `E2E-AUTH-01f` | ANÓNIMO | 200 | | | |
-| 021 | `E2E-AUTH-01g` | ANÓNIMO | 401 | | | |
-| 022 | `E2E-AUTH-01h` | ANÓNIMO | 401 | | | |
-| 023 | `E2E-AUTH-01i` | ANÓNIMO | 401 | | | |
-| 024 | `E2E-AUTH-01j` | ANÓNIMO | 400 | | | |
-| 025 | `E2E-AUTH-02a` | USER_A | 200 | | | |
-| 026 | `E2E-AUTH-02b` | USER_B | 200 | | | |
-| 027 | `E2E-AUTH-02c` | STAFF | 200 | | | |
-| 028 | `E2E-AUTH-02d` | ADMIN | 200 | | | |
+| 019 | `E2E-AUTH-01e` | ANÓNIMO | 200 |200| PASS| |
+| 020 | `E2E-AUTH-01f` | ANÓNIMO | 200 |200 |PASS | |
+| 021 | `E2E-AUTH-01g` | ANÓNIMO | 401 |401|PASS | |
+| 022 | `E2E-AUTH-01h` | ANÓNIMO | 401 |401 |PASS | |
+| 023 | `E2E-AUTH-01i` | ANÓNIMO | 401 |401 |PASS | |
+| 024 | `E2E-AUTH-01j` | ANÓNIMO | 400 |400 |PASS | |
+| 025 | `E2E-AUTH-02a` | USER_A | 200 |200 |PASS | |
+| 026 | `E2E-AUTH-02b` | USER_B | 200 |200 |PASS | |
+| 027 | `E2E-AUTH-02c` | STAFF | 200 |200|PASS | |
+| 028 | `E2E-AUTH-02d` | ADMIN | 200 |200 |PASS | |
 
 ## 04 Usuarios / consulta y propiedad (2 rutas)
 
